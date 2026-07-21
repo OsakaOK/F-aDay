@@ -8,22 +8,22 @@ export function HintList({ hints }: { hints: RevealedHint[] }) {
       {hints.map((hint) => (
         <div
           key={hint.level}
-          className="animate-fade-in rounded-xl border border-amber-300/60 bg-amber-50 px-4 py-3 text-sm dark:border-amber-500/30 dark:bg-amber-500/10"
+          className="animate-fade-in rounded-md border border-dashed bg-hintBg px-4 py-3"
+          style={{ borderColor: "var(--hint-edge)" }}
         >
-          <div className="mb-0.5 flex items-center gap-2 text-xs font-semibold uppercase tracking-wide text-amber-700 dark:text-amber-400">
-            <span>Hint {hint.level}</span>
+          <div className="mb-1 flex items-center gap-2">
+            <span className="label">Marginal Note {hint.level}</span>
             {hint.level === 2 && hint.kind === "community" && (
-              <span className="rounded-full bg-amber-200/70 px-2 py-0.5 text-[10px] font-medium normal-case tracking-normal text-amber-800 dark:bg-amber-500/20 dark:text-amber-300">
-                from the community
+              <span className="rounded-sm border border-brass px-1.5 py-0.5 font-mono text-[10px] uppercase tracking-wider text-brass">
+                from a fellow explorer
               </span>
             )}
           </div>
-          <p className="text-slate-800 dark:text-amber-100">{hint.text}</p>
+          <p className="font-body text-[0.95rem] italic text-ink">{hint.text}</p>
           {hint.level === 2 && hint.kind === "community" && hint.poolSize! > 1 && (
-            <p className="mt-1 text-xs text-amber-700/80 dark:text-amber-400/80">
-              {hint.poolSize! - 1} more community hint
-              {hint.poolSize! - 1 === 1 ? "" : "s"} available — solve it to browse and
-              rate them.
+            <p className="mt-1 font-body text-xs text-inkMuted">
+              {hint.poolSize! - 1} more note{hint.poolSize! - 1 === 1 ? "" : "s"} in the
+              margins — solve it to browse and rate them.
             </p>
           )}
         </div>

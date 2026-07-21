@@ -4,9 +4,32 @@ export default {
   content: ["./src/**/*.{js,ts,jsx,tsx,mdx}"],
   theme: {
     extend: {
+      // Vintage Atlas palette — all driven by CSS variables (see globals.css) so
+      // light (parchment) and dark (candlelit study) swap cleanly.
       colors: {
-        correct: "#16a34a",
-        wrong: "#dc2626",
+        parchment: "var(--parchment)",
+        paper: "var(--paper)",
+        paper2: "var(--paper-2)",
+        ink: "var(--ink)",
+        inkMuted: "var(--ink-muted)",
+        edge: "var(--edge)",
+        edgeSoft: "var(--edge-soft)",
+        teal: "var(--teal)",
+        tealStrong: "var(--teal-strong)",
+        tealTint: "var(--teal-tint)",
+        brass: "var(--brass)",
+        brassSoft: "var(--brass-soft)",
+        correct: "var(--correct)",
+        correctBg: "var(--correct-bg)",
+        wrong: "var(--wrong)",
+        wrongBg: "var(--wrong-bg)",
+        hintBg: "var(--hint-bg)",
+        hintEdge: "var(--hint-edge)",
+      },
+      fontFamily: {
+        display: ["var(--font-display)", "Georgia", "serif"],
+        body: ["var(--font-body)", "Georgia", "serif"],
+        mono: ["var(--font-mono)", "ui-monospace", "monospace"],
       },
       keyframes: {
         "fade-in": {

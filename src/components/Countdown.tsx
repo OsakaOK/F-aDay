@@ -25,7 +25,7 @@ export function Countdown() {
   }, []);
 
   return (
-    <span className="tabular-nums font-medium text-slate-700 dark:text-slate-200">
+    <span className="font-mono tabular-nums text-ink">
       {remaining === null ? "—:—:—" : format(remaining)}
     </span>
   );

@@ -20,3 +20,17 @@ export function daysSinceEpoch(now: number = Date.now()): number {
 export function nextUtcMidnight(now: number = Date.now()): number {
   return (daysSinceEpoch(now) + 1) * MS_PER_DAY;
 }
+
+/**
+ * The calendar date for a given puzzle day index, e.g. "21 July 2026". Pinned to
+ * UTC + a fixed locale so server and client render identically (no hydration
+ * mismatch) and it lines up with the UTC-midnight puzzle boundary.
+ */
+export function formatPuzzleDate(dayIndex: number): string {
+  return new Date(dayIndex * MS_PER_DAY).toLocaleDateString("en-GB", {
+    timeZone: "UTC",
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+  });
+}
