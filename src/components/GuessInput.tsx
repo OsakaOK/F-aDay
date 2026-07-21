@@ -82,7 +82,7 @@ export function GuessInput({ options, guessedCca3, disabled, pending, onSelect }
         type="text"
         value={query}
         disabled={disabled}
-        placeholder="Type a country name…"
+        placeholder="Name the flag"
         autoComplete="off"
         aria-label="Guess a country"
         aria-expanded={open}
@@ -94,7 +94,7 @@ export function GuessInput({ options, guessedCca3, disabled, pending, onSelect }
         }}
         onFocus={() => query && setOpen(true)}
         onKeyDown={onKeyDown}
-        className="w-full rounded-xl border border-slate-300 bg-white px-4 py-3 text-base shadow-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 disabled:cursor-not-allowed disabled:opacity-60 dark:border-slate-700 dark:bg-slate-900"
+        className="w-full rounded-md border border-edge bg-paper px-4 py-3 font-body text-base text-ink shadow-inner outline-none transition placeholder:text-inkMuted focus:border-teal focus:ring-2 focus:ring-teal disabled:cursor-not-allowed disabled:opacity-60"
       />
 
       {open && results.length > 0 && (
@@ -112,14 +112,14 @@ export function GuessInput({ options, guessedCca3, disabled, pending, onSelect }
                   disabled={isGuessed || pending}
                   onMouseEnter={() => setActive(i)}
                   onClick={() => choose(o)}
-                  className={`flex w-full items-center gap-3 rounded-lg px-3 py-2 text-left text-sm transition ${
-                    i === active ? "bg-blue-500/10" : ""
-                  } ${isGuessed ? "cursor-not-allowed opacity-40" : "hover:bg-blue-500/10"}`}
+                  className={`flex w-full items-center gap-3 rounded px-3 py-2 text-left font-body text-sm text-ink transition ${
+                    i === active ? "bg-tealTint" : ""
+                  } ${isGuessed ? "cursor-not-allowed opacity-40" : "hover:bg-tealTint"}`}
                 >
                   <span className="text-xl leading-none">{o.flagEmoji}</span>
                   <span className="flex-1">{o.name}</span>
                   {isGuessed && (
-                    <span className="text-xs text-slate-400">guessed</span>
+                    <span className="font-mono text-xs text-inkMuted">logged</span>
                   )}
                 </button>
               </li>

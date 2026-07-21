@@ -6,6 +6,7 @@ import { GuessInput } from "./GuessInput";
 import { HintList } from "./HintList";
 import { ResultView } from "./ResultView";
 import { Countdown } from "./Countdown";
+import { formatPuzzleDate } from "@/lib/time";
 
 export function GameBoard({
   initialState,
@@ -56,40 +57,44 @@ export function GameBoard({
 
   return (
     <div className="flex flex-col gap-5">
-      {/* Flag */}
+      {/* Flag — mounted like a specimen on the map */}
       <div className="card overflow-hidden">
-        <div className="flex items-center justify-center bg-slate-100 p-6 dark:bg-slate-800/50">
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={state.flagUrl}
-            alt="Flag to guess"
-            className="max-h-48 w-auto rounded-md shadow-md ring-1 ring-black/10"
-          />
+        <div className="p-5">
+          <div className="map-frame flex items-center justify-center p-6">
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img
+              src={state.flagUrl}
+              alt="Flag to guess"
+              className="max-h-44 w-auto rounded-sm shadow-[0_6px_18px_-8px_rgba(43,32,18,0.6)] ring-1 ring-black/10"
+            />
+          </div>
         </div>
-        <div className="flex items-center justify-between px-4 py-2.5 text-xs text-slate-500 dark:text-slate-400">
-          <span>Day #{state.dayIndex}</span>
+        <div className="flex items-center justify-between border-t border-edge px-4 py-2.5 font-mono text-xs text-inkMuted">
+          <span>{formatPuzzleDate(state.dayIndex)}</span>
           <span>
-            Next flag in <Countdown />
+            next chart in <Countdown />
           </span>
         </div>
       </div>
 
-      {/* Guesses so far */}
+      {/* Guesses logged so far */}
       {state.guesses.length > 0 && (
         <ul className="flex flex-col gap-1.5">
           {state.guesses.map((g, i) => (
             <li
               key={`${g.cca3}-${i}`}
-              className={`flex items-center gap-3 rounded-xl border px-4 py-2.5 text-sm ${
+              className={`flex items-center gap-3 rounded-md border px-4 py-2.5 ${
                 g.correct
-                  ? "border-emerald-300 bg-emerald-50 dark:border-emerald-500/40 dark:bg-emerald-500/10"
-                  : "border-slate-200 bg-white/70 dark:border-slate-800 dark:bg-slate-900/50"
+                  ? "border-correct bg-correctBg"
+                  : "border-edge bg-paper2"
               }`}
             >
               <span className="text-xl leading-none">{g.flagEmoji}</span>
-              <span className="flex-1">{g.name}</span>
-              <span className={g.correct ? "text-emerald-500" : "text-rose-400"}>
-                {g.correct ? "✓" : "✗"}
+              <span className="flex-1 font-body text-ink">{g.name}</span>
+              <span
+                className={`font-mono text-sm ${g.correct ? "text-correct" : "text-wrong"}`}
+              >
+                {g.correct ? "✓ found" : "✗"}
               </span>
             </li>
           ))}
@@ -100,10 +105,8 @@ export function GameBoard({
 
       {!finished ? (
         <div className="flex flex-col gap-2">
-          <div className="flex items-center justify-between text-xs text-slate-500 dark:text-slate-400">
-            <span>
-              Guess {state.guesses.length + 1} of {state.maxGuesses}
-            </span>
+          <div className="label !text-inkMuted">
+            Attempt {state.guesses.length + 1} of {state.maxGuesses}
           </div>
           <GuessInput
             options={options}
@@ -113,7 +116,7 @@ export function GameBoard({
             onSelect={onGuess}
           />
           {banner && (
-            <p className="animate-shake rounded-lg bg-rose-50 px-3 py-2 text-sm text-rose-600 dark:bg-rose-500/10 dark:text-rose-400">
+            <p className="animate-shake rounded-md border border-wrong bg-wrongBg px-3 py-2 font-body text-sm text-wrong">
               {banner}
             </p>
           )}

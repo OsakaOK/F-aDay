@@ -28,14 +28,12 @@ export function CommunitySection({
 
 function FactsBlock({ data, post }: { data: CommunityData; post: PostFn }) {
   return (
-    <section className="card p-4 sm:p-5">
-      <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-        Community fun facts
-      </h3>
+    <section className="card p-5">
+      <h3 className="label">Explorers&apos; Fun Facts</h3>
 
       {data.facts.length === 0 ? (
-        <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">
-          No community facts yet — be the first to add one.
+        <p className="mt-3 font-body text-sm italic text-inkMuted">
+          No accounts recorded yet — be the first to add one.
         </p>
       ) : (
         <ul className="mt-3 flex flex-col gap-2">
@@ -55,15 +53,15 @@ function FactsBlock({ data, post }: { data: CommunityData; post: PostFn }) {
         <SubmitForm
           url="/api/fact"
           field="text"
-          placeholder="Share a fun fact — did you know…?"
-          cta="Add fun fact"
-          note="Only if you're from this country (honour system)."
+          placeholder="Record a fun fact — did you know…?"
+          cta="Record fact"
+          note="Only if you hail from this land (honour system)."
           post={post}
         />
       )}
       {data.hasSubmittedFact && (
-        <p className="mt-3 text-xs text-emerald-600 dark:text-emerald-400">
-          Thanks — your fun fact was submitted.
+        <p className="mt-3 font-body text-xs italic text-correct">
+          Recorded — thank you, your fun fact was added to the log.
         </p>
       )}
     </section>
@@ -74,27 +72,25 @@ function FactsBlock({ data, post }: { data: CommunityData; post: PostFn }) {
 
 function HintsBlock({ data, post }: { data: CommunityData; post: PostFn }) {
   return (
-    <section className="card p-4 sm:p-5">
-      <h3 className="text-sm font-semibold uppercase tracking-wide text-slate-500 dark:text-slate-400">
-        Community hints
-      </h3>
+    <section className="card p-5">
+      <h3 className="label">Explorers&apos; Hints</h3>
 
       {!data.canParticipateHints ? (
-        <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">
-          Solve the flag to rate these hints and leave one for tomorrow&apos;s
-          players.
+        <p className="mt-3 font-body text-sm italic text-inkMuted">
+          Chart the flag to rate these hints and leave one for tomorrow&apos;s
+          explorers.
         </p>
       ) : (
         <>
           {data.hintPool.length === 0 ? (
-            <p className="mt-3 text-sm text-slate-500 dark:text-slate-400">
-              No community hints from the last cycle yet.
+            <p className="mt-3 font-body text-sm italic text-inkMuted">
+              No hints from the last expedition through here yet.
             </p>
           ) : (
             <>
-              <p className="mt-3 mb-2 text-xs text-slate-500 dark:text-slate-400">
-                These hints were shown this cycle — rate them so the best rise to the
-                top.
+              <p className="mb-2 mt-3 font-body text-xs text-inkMuted">
+                These notes guided this cycle&apos;s explorers — rate them so the best
+                rise to the top.
               </p>
               <ul className="flex flex-col gap-2">
                 {data.hintPool.map((item) => (
@@ -114,14 +110,14 @@ function HintsBlock({ data, post }: { data: CommunityData; post: PostFn }) {
             <SubmitForm
               url="/api/hint"
               field="text"
-              placeholder="Write a hint for the next cycle — clever, not a giveaway."
-              cta="Submit hint"
-              note="Shown as Hint 2 to future players. Can't mention the country's name."
+              placeholder="Pen a hint for the next expedition — clever, not a giveaway."
+              cta="Leave hint"
+              note="Shown as a marginal note to future players. Can't name the country."
               post={post}
             />
           ) : (
-            <p className="mt-3 text-xs text-emerald-600 dark:text-emerald-400">
-              Thanks — your hint will help next cycle&apos;s players.
+            <p className="mt-3 font-body text-xs italic text-correct">
+              Penned — your hint will guide next cycle&apos;s explorers.
             </p>
           )}
         </>
@@ -153,20 +149,20 @@ function ItemCard({
   };
 
   return (
-    <li className="flex items-start gap-3 rounded-xl border border-slate-200 bg-white/60 px-3 py-2.5 dark:border-slate-800 dark:bg-slate-900/40">
+    <li className="flex items-start gap-3 rounded-md border border-edge bg-paper2 px-3 py-2.5">
       <div className="flex flex-col items-center gap-0.5 pt-0.5">
         <button
           type="button"
           disabled={!canParticipate || busy}
           aria-label="Upvote"
           onClick={() => act("/api/vote", { targetType, targetId: item.id, value: "up" })}
-          className={`text-lg leading-none transition disabled:opacity-40 ${
-            item.myVote === "up" ? "text-emerald-500" : "text-slate-400 hover:text-emerald-500"
+          className={`text-base leading-none transition disabled:opacity-40 ${
+            item.myVote === "up" ? "text-correct" : "text-inkMuted hover:text-correct"
           }`}
         >
           ▲
         </button>
-        <span className="min-w-4 text-center text-sm font-semibold tabular-nums">
+        <span className="min-w-4 text-center font-mono text-sm font-bold text-ink">
           {item.score}
         </span>
         <button
@@ -174,8 +170,8 @@ function ItemCard({
           disabled={!canParticipate || busy}
           aria-label="Downvote"
           onClick={() => act("/api/vote", { targetType, targetId: item.id, value: "down" })}
-          className={`text-lg leading-none transition disabled:opacity-40 ${
-            item.myVote === "down" ? "text-rose-500" : "text-slate-400 hover:text-rose-500"
+          className={`text-base leading-none transition disabled:opacity-40 ${
+            item.myVote === "down" ? "text-wrong" : "text-inkMuted hover:text-wrong"
           }`}
         >
           ▼
@@ -183,16 +179,16 @@ function ItemCard({
       </div>
 
       <div className="flex-1">
-        <p className="text-sm text-slate-800 dark:text-slate-100">{item.text}</p>
-        <div className="mt-1 flex items-center gap-3 text-xs text-slate-400">
-          {item.mine && <span className="text-blue-500">you</span>}
+        <p className="font-body text-[0.95rem] text-ink">{item.text}</p>
+        <div className="mt-1 flex items-center gap-3 font-mono text-xs text-inkMuted">
+          {item.mine && <span className="text-teal">yours</span>}
           <button
             type="button"
             disabled={!canParticipate || busy || item.myFlagged}
             onClick={() => act("/api/flag", { targetType, targetId: item.id })}
-            className="transition hover:text-rose-500 disabled:opacity-50"
+            className="transition hover:text-wrong disabled:opacity-50"
           >
-            {item.myFlagged ? "🚩 flagged" : "⚐ flag"}
+            {item.myFlagged ? "⚑ flagged" : "⚐ flag"}
           </button>
         </div>
       </div>
@@ -233,29 +229,29 @@ function SubmitForm({
   const tooShort = text.trim().length < MIN_LEN;
 
   return (
-    <div className="mt-4 border-t border-slate-200 pt-4 dark:border-slate-800">
+    <div className="mt-4 border-t border-edge pt-4">
       <textarea
         value={text}
         maxLength={MAX_LEN}
         rows={2}
         placeholder={placeholder}
         onChange={(e) => setText(e.target.value)}
-        className="w-full resize-none rounded-xl border border-slate-300 bg-white px-3 py-2 text-sm outline-none transition focus:border-blue-500 focus:ring-2 focus:ring-blue-500/30 dark:border-slate-700 dark:bg-slate-900"
+        className="w-full resize-none rounded-md border border-edge bg-paper px-3 py-2 font-body text-sm text-ink shadow-inner outline-none transition placeholder:text-inkMuted focus:border-teal focus:ring-2 focus:ring-teal"
       />
       <div className="mt-1 flex items-center justify-between gap-2">
-        <span className="text-xs text-slate-400">{note}</span>
-        <span className="text-xs tabular-nums text-slate-400">
+        <span className="font-body text-xs italic text-inkMuted">{note}</span>
+        <span className="font-mono text-xs text-inkMuted">
           {text.length}/{MAX_LEN}
         </span>
       </div>
-      {error && <p className="mt-1 text-xs text-rose-500">{error}</p>}
+      {error && <p className="mt-1 font-body text-xs text-wrong">{error}</p>}
       <button
         type="button"
         disabled={busy || tooShort}
         onClick={submit}
-        className="mt-2 rounded-lg bg-blue-600 px-4 py-2 text-sm font-semibold text-white transition hover:bg-blue-500 disabled:cursor-not-allowed disabled:opacity-50"
+        className="mt-2 rounded-md bg-teal px-4 py-2 font-display text-sm font-semibold text-paper transition hover:bg-tealStrong disabled:cursor-not-allowed disabled:opacity-50"
       >
-        {busy ? "Submitting…" : cta}
+        {busy ? "Recording…" : cta}
       </button>
     </div>
   );
