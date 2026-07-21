@@ -8,6 +8,9 @@ Built with Next.js (App Router), Drizzle ORM, and Postgres. Runs locally with **
 external setup** — it falls back to an embedded Postgres (PGlite) so you don't need to
 stand up a database to develop.
 
+> **Live:** deployed on Vercel (Supabase Postgres). Every merge to `main` auto-deploys,
+> and every pull request is gated by CI. _Add your Vercel URL here._
+
 ## How it plays
 
 - **Shared daily puzzle** — the country is chosen from a fixed, deterministic shuffle of
@@ -38,6 +41,24 @@ stand up a database to develop.
 - No admin dashboard in v1 — moderation is fully community-driven. Direct DB access is the
   manual escape hatch.
 
+## Design
+
+The interface uses a **"Vintage Atlas"** theme — an old-world explorer's-journal look
+rather than generic SaaS styling:
+
+- **Palette** — aged parchment with a faint paper grain, sepia ink, deep teal, and brass
+  accents (wins in a herbarium green, misses in oxblood). Fully theme-aware: a
+  candlelit-study dark variant swaps in automatically.
+- **Typography** (loaded via `next/font`) — **Fraunces** for display/headings,
+  **EB Garamond** for body, and **Courier Prime** (typewriter) for numerals like the date
+  and countdown.
+- **Signature details** — a compass rose, an engraver's double rule, and the flag mounted
+  inside a dashed "map-route" frame.
+
+Every color is a CSS variable in [src/app/globals.css](src/app/globals.css) mapped to
+Tailwind tokens in [tailwind.config.ts](tailwind.config.ts), so re-theming is a
+one-file change.
+
 ## Tech stack
 
 | Concern      | Choice                                                              |
@@ -45,8 +66,10 @@ stand up a database to develop.
 | Framework    | Next.js 15 (App Router, React 19, TypeScript, Tailwind)             |
 | Database     | Postgres — **PGlite** (embedded) locally, node-postgres in prod     |
 | ORM          | Drizzle ORM + Drizzle Kit migrations                                |
-| Hosting      | Vercel                                                              |
-| Country data | [mledoze/countries](https://github.com/mledoze/countries) (the open dataset REST Countries is built from) + World Bank population + [flagcdn.com](https://flagcdn.com) flag images — all keyless |
+| Hosting      | Vercel (auto-deploys from `main`) + Supabase Postgres               |
+| CI           | GitHub Actions — tests + production build on every PR               |
+| Fonts        | Fraunces, EB Garamond, Courier Prime via `next/font`               |
+| Data source  | [mledoze/countries](https://github.com/mledoze/countries) (the open dataset REST Countries is built from) + World Bank population + [flagcdn.com](https://flagcdn.com) flag images — all keyless |
 
 > The public REST Countries API now requires an API key for the bulk endpoint, so the
 > seed pulls the same underlying open data directly. No API key is needed.
@@ -102,17 +125,26 @@ The suite (Vitest) has two layers:
 
 No external database or network is required to run the tests.
 
+### Continuous integration
+
+[.github/workflows/ci.yml](.github/workflows/ci.yml) runs the full test suite **and** a
+production build on every pull request into `main` (and on pushes to `main`). Since `main`
+auto-deploys, this is the gate that keeps a broken change from reaching production.
+
 ## Deploying to Vercel
 
 1. Provision a Postgres database (Supabase or Neon).
-2. Set `DATABASE_URL` in the Vercel project env. When present, the app uses node-postgres
-   instead of PGlite — no other code changes.
-3. Run migrations and seed against that database once:
+2. Migrate and seed it once from your machine:
    ```bash
-   DATABASE_URL=postgres://… npm run db:migrate
-   DATABASE_URL=postgres://… npm run db:seed
+   DATABASE_URL='postgres://…' npm run db:migrate
+   DATABASE_URL='postgres://…' npm run db:seed
    ```
-4. Deploy.
+   > **Supabase tip:** use the **session pooler** (`:5432`) string for migrate/seed, and
+   > the **transaction pooler** (`:6543`) string for the app's `DATABASE_URL` — the
+   > transaction pooler is built for serverless. Avoid the IPv6-only direct connection.
+3. Import the repo into Vercel and set `DATABASE_URL` to your app connection string. When
+   present, the app uses node-postgres instead of PGlite — no other code changes.
+4. Deploy. From then on, every merge to `main` redeploys automatically.
 
 ## Data model
 
