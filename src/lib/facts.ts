@@ -43,19 +43,6 @@ export function baselineFacts(c: Country): string[] {
   return facts;
 }
 
-/**
- * Auto-generated fallback for Hint 2 when no previous-cycle community hint pool
- * exists (a country's first-ever cycle). Prefers capital, then population.
- */
-export function autoHint(c: Country): string {
-  if (c.capital) return `Its capital city is ${c.capital}.`;
-  if (c.population != null)
-    return `Its population is about ${formatPopulation(c.population)}.`;
-  if (c.subregion) return `It's located in ${c.subregion}.`;
-  if (c.region) return `It's located in ${c.region}.`;
-  return "This one's a mystery — no extra hint available.";
-}
-
 function listToProse(items: string[]): string {
   if (items.length <= 1) return items.join("");
   if (items.length === 2) return `${items[0]} and ${items[1]}`;

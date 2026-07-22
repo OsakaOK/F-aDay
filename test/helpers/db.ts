@@ -11,8 +11,7 @@ import type { DrizzleDb } from "@/db";
  * Synthetic country fixtures used across integration tests. cycleIndex is
  * 0..N-1 in array order, so with FADAY_DAY_OVERRIDE=k the day's answer is
  * FIXTURES[k]. Names/aliases are invented to avoid accidental collisions in the
- * giveaway-filter tests. Index 0 has a capital (autoHint → capital); index 1 has
- * none but a population (autoHint → population).
+ * giveaway-filter tests.
  */
 export const FIXTURES = [
   {

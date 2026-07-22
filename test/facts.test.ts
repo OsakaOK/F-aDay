@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { autoHint, baselineFacts } from "@/lib/facts";
+import { baselineFacts } from "@/lib/facts";
 import { makeCountry } from "./helpers/country";
 
 describe("baselineFacts", () => {
@@ -34,23 +34,5 @@ describe("baselineFacts", () => {
     );
     expect(facts.every((f) => !f.includes("capital"))).toBe(true);
     expect(Array.isArray(facts)).toBe(true);
-  });
-});
-
-describe("autoHint", () => {
-  it("prefers the capital city", () => {
-    expect(autoHint(makeCountry())).toContain("Alphaville");
-  });
-
-  it("falls back to population when there is no capital", () => {
-    const hint = autoHint(makeCountry({ capital: null, population: 2_000_000 }));
-    expect(hint).toContain("2.0 million");
-  });
-
-  it("falls back to region when there is no capital or population", () => {
-    const hint = autoHint(
-      makeCountry({ capital: null, population: null, subregion: "Polynesia" }),
-    );
-    expect(hint).toContain("Polynesia");
   });
 });

@@ -51,31 +51,27 @@ describe("fresh game state", () => {
 });
 
 describe("guessing and hints", () => {
-  it("reveals the region hint after the first wrong guess", async () => {
+  it("shows no hint on a first-ever cycle (no community pool, no auto fallback)", async () => {
     const state = await submitGuess("p1", "BBB");
     expect(state.status).toBe("playing");
     expect(state.guesses).toHaveLength(1);
     expect(state.guesses[0]).toMatchObject({ cca3: "BBB", correct: false });
-    expect(state.hints).toHaveLength(1);
-    expect(state.hints[0]).toMatchObject({ level: 1, kind: "region" });
-    expect(state.hints[0].text).toContain("Northern Europe");
+    expect(state.hints).toEqual([]);
   });
 
-  it("reveals an auto hint (capital) after the second wrong guess when no pool exists", async () => {
+  it("still shows no hint after further wrong guesses when no pool exists", async () => {
     await submitGuess("p1", "BBB");
     const state = await submitGuess("p1", "CCC");
-    expect(state.hints).toHaveLength(2);
-    const hint2 = state.hints.find((h) => h.level === 2)!;
-    expect(hint2.kind).toBe("auto");
-    expect(hint2.text).toContain("Alphaville"); // AAA's capital
+    expect(state.hints).toEqual([]);
   });
 
-  it("reconstructs revealed hints on a fresh state load (persistence)", async () => {
+  it("persists guesses on a fresh state load", async () => {
     await submitGuess("p1", "BBB");
     await submitGuess("p1", "CCC");
     const reloaded = await getGameState("p1");
     expect(reloaded.status).toBe("playing");
-    expect(reloaded.hints).toHaveLength(2);
+    expect(reloaded.guesses).toHaveLength(2);
+    expect(reloaded.hints).toEqual([]);
   });
 
   it("rejects a code that is not a real country", async () => {
@@ -126,9 +122,9 @@ describe("losing", () => {
     expect(state.status).toBe("lost");
     expect(state.guesses).toHaveLength(3);
     expect(state.answer?.name).toBe("Alphaland");
-    // Losers can add fun facts but not hints.
+    // Losers can neither add hints nor fun facts — participation needs a win.
     expect(state.community?.canParticipateHints).toBe(false);
-    expect(state.community?.canParticipateFacts).toBe(true);
+    expect(state.community?.canParticipateFacts).toBe(false);
   });
 });
 

@@ -21,6 +21,7 @@ let db: DrizzleDb;
 const ANSWER = FIXTURES[0]; // AAA / Alphaland
 const GOOD_FACT = "The local coastline is famous for its dramatic cliffs.";
 const GOOD_HINT = "A small northern place known for an old clifftop castle.";
+const HINT_B = "Famous for rugged coastal scenery and seabird colonies.";
 
 /** Play today's puzzle to a win for `cookie`. */
 async function win(cookie: string) {
@@ -50,9 +51,11 @@ describe("fun fact submission", () => {
     expect(state.community?.hasSubmittedFact).toBe(true);
   });
 
-  it("lets a losing player add a fact too", async () => {
+  it("rejects a fact from a player who lost (participation needs a win)", async () => {
     await lose("p2");
-    await expect(submitFact("p2", GOOD_FACT)).resolves.toBeUndefined();
+    await expect(submitFact("p2", GOOD_FACT)).rejects.toMatchObject({
+      code: "not_eligible",
+    });
   });
 
   it("rejects a second fact from the same player in the same cycle", async () => {
@@ -176,25 +179,66 @@ describe("flagging", () => {
   });
 });
 
-describe("cross-cycle community hint pool", () => {
-  it("surfaces a previous cycle's surviving hint as this cycle's Hint 2", async () => {
-    // Cycle 0: a solver leaves a hint for AAA.
+describe("community hint pool", () => {
+  /** The top-ranked in-game hint a still-guessing player would see (if any). */
+  async function inGameHint(cookie: string) {
+    const state = await getGameState(cookie);
+    return state.hints.find((h) => h.kind === "community");
+  }
+
+  it("shows a solver's hint to another player still guessing, right away", async () => {
     await win("author");
     await submitHint("author", GOOD_HINT);
 
-    // Jump to the next time AAA comes around (cycle 1, previous cycle = 0).
+    // A different player, no guesses yet, sees it immediately — same cycle.
+    const hint = await inGameHint("player");
+    expect(hint).toMatchObject({ kind: "community", text: GOOD_HINT, poolSize: 1 });
+  });
+
+  it("shows no hint before anyone has submitted one", async () => {
+    expect(await inGameHint("player")).toBeUndefined();
+  });
+
+  it("surfaces the highest-scored hint and counts the whole pool", async () => {
+    await win("a1");
+    await submitHint("a1", GOOD_HINT);
+    await win("a2");
+    await submitHint("a2", HINT_B);
+
+    // Upvote HINT_B so it outranks the (tied) GOOD_HINT.
+    const hintB = (await getGameState("a1")).community!.hintPool.find(
+      (h) => h.text === HINT_B,
+    )!;
+    await win("voter");
+    await castVote("voter", "hint", hintB.id, "up");
+
+    const hint = await inGameHint("player");
+    expect(hint).toMatchObject({ text: HINT_B, poolSize: 2 });
+  });
+
+  it("excludes a hint once it's been removed by flags", async () => {
+    await win("author");
+    await submitHint("author", GOOD_HINT);
+    const hintId = (await getGameState("author")).community!.hintPool[0].id;
+
+    // Flag it to the auto-removal threshold from distinct solvers.
+    for (let i = 0; i < FLAG_THRESHOLD; i++) {
+      const c = `flag${i}`;
+      await win(c);
+      await castFlag(c, "hint", hintId);
+    }
+
+    expect(await inGameHint("player")).toBeUndefined();
+    expect((await getGameState("author")).community!.hintPool).toHaveLength(0);
+  });
+
+  it("keeps showing a hint when the flag comes back around a later cycle", async () => {
+    // Cycle 0: leave a hint for AAA.
+    await win("author");
+    await submitHint("author", GOOD_HINT);
+
+    // Jump a full rotation so AAA is today again (cycle 1).
     setDay(FIXTURE_COUNT); // dayIndex 6 → cycleIndex 0 (AAA), cycle 1
-
-    await submitGuess("player", "BBB");
-    const afterTwo = await submitGuess("player", "CCC");
-    const hint2 = afterTwo.hints.find((h) => h.level === 2)!;
-    expect(hint2.kind).toBe("community");
-    expect(hint2.text).toBe(GOOD_HINT);
-    expect(hint2.poolSize).toBe(1);
-
-    // After solving, the pool is browsable/votable.
-    const won = await submitGuess("player", "AAA");
-    expect(won.community?.hintPool).toHaveLength(1);
-    expect(won.community?.hintPool[0].text).toBe(GOOD_HINT);
+    expect(await inGameHint("player")).toMatchObject({ text: GOOD_HINT });
   });
 });

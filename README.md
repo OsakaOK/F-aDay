@@ -1,8 +1,8 @@
 # Flag a Day
 
 A daily flag-guessing game. Everyone gets the **same flag each day** (Wordle-style),
-you get **three guesses**, progressive hints, and a community layer for hints and fun
-facts. New puzzle every day at **UTC midnight**.
+you get **three guesses**, a community hint to nudge you along, and a community layer of
+hints and fun facts. New puzzle every day at **UTC midnight**.
 
 Built with Next.js (App Router), Drizzle ORM, and Postgres. Runs locally with **zero
 external setup** — it falls back to an embedded Postgres (PGlite) so you don't need to
@@ -18,21 +18,20 @@ stand up a database to develop.
   until the whole list cycles (~8 months).
 - **Three guesses**, chosen from a searchable country list (no free-text/fuzzy matching).
   A wrong guess is a plain miss — no distance or direction hints.
-- **Hints**
-  - Hint 1 (after miss 1): the country's region.
-  - Hint 2 (after miss 2): the top community hint from the **previous cycle's** surviving
-    pool; falls back to an auto-generated hint (capital/population) on a first-ever cycle.
-  - After miss 3: the answer is revealed.
+- **Community hint** — shown from your very first attempt: the top-voted community hint for
+  that flag, drawn from **every surviving hint across all its past appearances**. There are
+  no auto-generated hints — if nobody has left one yet, none is shown.
+- **Reveal** — after the third miss, the answer is shown.
 - **After finishing** (win or lose): baseline fun facts (always present, from structured
-  data) plus a community fun-fact layer.
+  data), plus a community fun-facts panel that slides out from the side.
 - **Locked once finished** — revisiting shows a read-only result view.
 
 ## Community & moderation
 
 - **Anonymous identity** — a cookie-based `player_id`, set by middleware. No accounts.
 - **Gating**
-  - Submit / vote / flag a **hint**: only players who *solved* that day's flag.
-  - Submit / vote / flag a **fun fact**: anyone who *finished* (won or lost).
+  - Submit / vote / flag a **hint** or a **fun fact**: only players who *solved* that day's
+    flag. Players who lost can read both but can't participate.
   - One hint + one fun fact per player, per country, per cycle.
 - **Submission filter** (automatic, no admin step): length bounds, banned-word / URL
   blocklist, and rejection of any text that leaks the country's name or a known alias.
@@ -100,8 +99,9 @@ Useful scripts:
 
 ### Dev-only day override
 
-To exercise a future day's puzzle (e.g. to see the previous cycle's community hint pool),
-set `FADAY_DAY_OVERRIDE` to a day index when running dev. Ignored in production.
+To jump to a specific day's puzzle (e.g. to land on a particular flag, or to check that a
+hint still shows when a flag comes back around), set `FADAY_DAY_OVERRIDE` to a day index
+when running dev. Ignored in production.
 
 ```bash
 FADAY_DAY_OVERRIDE=20905 npm run dev
@@ -118,10 +118,11 @@ The suite (Vitest) has two layers:
 - **Integration tests** run the real game and community logic against an **in-memory
   PGlite** database (fresh per test file, migrated and seeded with synthetic fixtures) —
   covering guessing, hints, win/lose, the finished-puzzle lock, submission gating, voting,
-  flag auto-removal, and the cross-cycle hint pool. Tests drive the puzzle day with the
-  `FADAY_DAY_OVERRIDE` hook, so no clock mocking is needed.
+  flag auto-removal, and the community hint pool (same-cycle reveal, vote ranking, and
+  cross-cycle persistence). Tests drive the puzzle day with the `FADAY_DAY_OVERRIDE` hook,
+  so no clock mocking is needed.
 - **Unit tests** cover the pure helpers: submission validation (length / URL / banned-word
-  / name-giveaway filters), baseline-fact and hint generation, day math, and formatting.
+  / name-giveaway filters), baseline-fact generation, day math, and formatting.
 
 No external database or network is required to run the tests.
 
