@@ -10,7 +10,7 @@ import {
   type Country,
 } from "@/db/schema";
 import { daysSinceEpoch } from "./time";
-import { autoHint, baselineFacts } from "./facts";
+import { baselineFacts } from "./facts";
 import {
   MAX_GUESSES,
   type CommunityItem,
@@ -117,17 +117,21 @@ function failedCount(guesses: string[], status: GameStatus): number {
   return guesses.length; // playing (all wrong so far) or lost (all 3 wrong)
 }
 
-// ---- Hint pool (previous cycle's surviving community hints) ----
+// ---- Hint pool (all surviving community hints for the country) ----
 
 type PoolHint = { id: string; text: string; upvotes: number; downvotes: number; flagCount: number; submittedBy: string };
 
+/**
+ * Every active hint left for this country, across all cycles. A hint a solver
+ * submits today joins this pool immediately, so other players still guessing the
+ * same flag see it right away — and it keeps showing when the flag comes back
+ * around. Top-ranked (by score) is surfaced in-game; the rest are browsable once
+ * finished.
+ */
 async function getHintPool(
   db: DrizzleDb,
   countryId: string,
-  cycleNumber: number,
 ): Promise<PoolHint[]> {
-  const prevCycle = cycleNumber - 1;
-  if (prevCycle < 0) return [];
   const rows = await db
     .select({
       id: hintsTable.id,
@@ -141,7 +145,6 @@ async function getHintPool(
     .where(
       and(
         eq(hintsTable.countryId, countryId),
-        eq(hintsTable.cycleSubmitted, prevCycle),
         eq(hintsTable.status, "active"),
       ),
     )
@@ -150,31 +153,17 @@ async function getHintPool(
   return rows.sort((a, b) => b.upvotes - b.downvotes - (a.upvotes - a.downvotes));
 }
 
-function buildRevealedHints(
-  country: Country,
-  revealedLevels: number,
-  pool: PoolHint[],
-): RevealedHint[] {
-  const hints: RevealedHint[] = [];
-  if (revealedLevels >= 1) {
-    const where = country.subregion
-      ? `${country.subregion}`
-      : (country.region ?? "an unknown region");
-    hints.push({ level: 1, kind: "region", text: `This country is in ${where}.` });
-  }
-  if (revealedLevels >= 2) {
-    if (pool.length > 0) {
-      hints.push({
-        level: 2,
-        kind: "community",
-        text: pool[0].text,
-        poolSize: pool.length,
-      });
-    } else {
-      hints.push({ level: 2, kind: "auto", text: autoHint(country) });
-    }
-  }
-  return hints;
+/**
+ * How many wrong guesses must be made before the community hint is revealed.
+ * 0 = shown immediately, from the very first attempt — the community hint is the
+ * whole point, so we surface it as early as possible. There is no auto-generated
+ * fallback: if today has no community hint, the player simply sees none.
+ */
+export const COMMUNITY_HINT_AFTER_FAILS = 0;
+
+function buildRevealedHints(pool: PoolHint[], reveal: boolean): RevealedHint[] {
+  if (!reveal || pool.length === 0) return [];
+  return [{ kind: "community", text: pool[0].text, poolSize: pool.length }];
 }
 
 // ---- Community section (shown once finished) ----
@@ -235,8 +224,8 @@ async function buildCommunitySection(
     mine: row.submittedBy === cookieId,
   });
 
-  // "Submitted this cycle" is scoped to the *current* cycle (feeds next cycle's
-  // Hint 2 pool), independent of the previous-cycle pool shown above.
+  // Each player may submit one hint/fact per cycle; "hasSubmitted" is scoped to
+  // the current cycle. The hint itself joins the live pool other players see now.
   const [mineHint, mineFact] = await Promise.all([
     db
       .select({ id: hintsTable.id })
@@ -264,7 +253,7 @@ async function buildCommunitySection(
 
   return {
     canParticipateHints: status === "won",
-    canParticipateFacts: status === "won" || status === "lost",
+    canParticipateFacts: status === "won",
     hasSubmittedHint: mineHint.length > 0,
     hasSubmittedFact: mineFact.length > 0,
     hintPool: pool.map(toItem),
@@ -293,11 +282,11 @@ export async function getGameState(cookieId: string): Promise<GameState> {
 
   const guessCodes = progress?.guesses ?? [];
   const status: GameStatus = progress?.outcome ?? "playing";
-  const revealedLevels = Math.min(failedCount(guessCodes, status), 2);
+  const revealHint = failedCount(guessCodes, status) >= COMMUNITY_HINT_AFTER_FAILS;
 
   const pool =
-    revealedLevels >= 2 || status !== "playing"
-      ? await getHintPool(db, country.id, cycleNumber)
+    revealHint || status !== "playing"
+      ? await getHintPool(db, country.id)
       : [];
 
   const state: GameState = {
@@ -308,7 +297,7 @@ export async function getGameState(cookieId: string): Promise<GameState> {
     status,
     guesses: toGuessResults(guessCodes, country.cca3, cache.byCca3),
     maxGuesses: MAX_GUESSES,
-    hints: buildRevealedHints(country, revealedLevels, pool),
+    hints: buildRevealedHints(pool, revealHint),
   };
 
   if (status !== "playing") {

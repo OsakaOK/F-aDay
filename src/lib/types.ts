@@ -17,15 +17,17 @@ export type GuessResult = {
   correct: boolean;
 };
 
-export type RevealedHint =
-  | { level: 1; kind: "region"; text: string }
-  | {
-      level: 2;
-      kind: "community" | "auto";
-      text: string;
-      /** Present for community hints: how many other surviving hints exist to browse. */
-      poolSize?: number;
-    };
+/**
+ * The only in-game hint is a community hint: the top-ranked surviving hint left
+ * by solvers on the country's previous cycle. There are no auto-generated hints,
+ * so if no community hint exists yet, none is shown.
+ */
+export type RevealedHint = {
+  kind: "community";
+  text: string;
+  /** How many surviving hints exist to browse (the top one is shown here). */
+  poolSize: number;
+};
 
 /** A community hint or fun fact with the viewer's own vote/flag state. */
 export type CommunityItem = {
@@ -43,11 +45,11 @@ export type CommunityItem = {
 export type CommunitySection = {
   /** Solved this cycle → may submit/vote/flag hints. */
   canParticipateHints: boolean;
-  /** Finished this cycle (won or lost) → may submit/vote/flag fun facts. */
+  /** Solved this cycle → may submit/vote/flag fun facts. */
   canParticipateFacts: boolean;
   hasSubmittedHint: boolean;
   hasSubmittedFact: boolean;
-  /** Previous cycle's surviving hint pool (what fed this cycle's Hint 2). */
+  /** All surviving community hints for this country (what feeds the in-game hint). */
   hintPool: CommunityItem[];
   /** All surviving community fun facts for this country. */
   facts: CommunityItem[];

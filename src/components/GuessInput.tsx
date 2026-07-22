@@ -116,7 +116,6 @@ export function GuessInput({ options, guessedCca3, disabled, pending, onSelect }
                     i === active ? "bg-tealTint" : ""
                   } ${isGuessed ? "cursor-not-allowed opacity-40" : "hover:bg-tealTint"}`}
                 >
-                  <span className="text-xl leading-none">{o.flagEmoji}</span>
                   <span className="flex-1">{o.name}</span>
                   {isGuessed && (
                     <span className="font-mono text-xs text-inkMuted">logged</span>

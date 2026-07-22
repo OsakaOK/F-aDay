@@ -28,8 +28,6 @@ type TargetType = "hint" | "fact";
 type VoteValue = "up" | "down";
 
 const solvedGate = (outcome: string | null | undefined) => outcome === "won";
-const finishedGate = (outcome: string | null | undefined) =>
-  outcome === "won" || outcome === "lost";
 
 // ---- Submissions ----
 
@@ -69,10 +67,10 @@ export async function submitHint(cookieId: string, rawText: string) {
 
 export async function submitFact(cookieId: string, rawText: string) {
   const { db, country, cycleNumber, progress } = await withProgress(cookieId);
-  if (!finishedGate(progress?.outcome)) {
+  if (!solvedGate(progress?.outcome)) {
     throw new CommunityError(
       "not_eligible",
-      "Finish today's puzzle before submitting a fun fact.",
+      "Only players who solved today's flag can submit a fun fact.",
     );
   }
   const result = validateSubmission(rawText, country);
@@ -110,9 +108,7 @@ export async function castVote(
   value: VoteValue,
 ) {
   const { db, country, progress } = await withProgress(cookieId);
-  const eligible =
-    targetType === "hint" ? solvedGate(progress?.outcome) : finishedGate(progress?.outcome);
-  if (!eligible) {
+  if (!solvedGate(progress?.outcome)) {
     throw new CommunityError("not_eligible", "You're not eligible to vote on this yet.");
   }
 
@@ -178,9 +174,7 @@ export async function castFlag(
   targetId: string,
 ) {
   const { db, country, progress } = await withProgress(cookieId);
-  const eligible =
-    targetType === "hint" ? solvedGate(progress?.outcome) : finishedGate(progress?.outcome);
-  if (!eligible) {
+  if (!solvedGate(progress?.outcome)) {
     throw new CommunityError("not_eligible", "You're not eligible to flag this yet.");
   }
 
